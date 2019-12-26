@@ -22,6 +22,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+    "reflect"
 	"strings"
 
 	"gopkg.in/gcfg.v1"
@@ -631,6 +632,24 @@ func Reload() *Configuration {
 		read(fileName)
 	}
 	return Config
+}
+
+// Show current configuration
+func Show() string {
+    for _, fileName := range readFileNames {
+        read(fileName)
+    }
+
+    var current string
+    s := reflect.ValueOf(Config).Elem()
+    typeOfT := s.Type()
+    for i := 0; i < s.NumField(); i++ {
+        f := s.Field(i)
+        current += fmt.Sprintf("%s = %v \r\n",
+            typeOfT.Field(i).Name, f.Interface())
+    }
+
+    return current
 }
 
 // MarkConfigurationLoaded is called once configuration has first been loaded.

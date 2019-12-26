@@ -2929,6 +2929,18 @@ func (this *HttpAPI) ReloadConfiguration(params martini.Params, r render.Render,
 	Respond(r, &APIResponse{Code: OK, Message: fmt.Sprintf("Config reloaded")})
 }
 
+// ShowConfiguration reads the config file and dumps it out
+func (this *HttpAPI) ShowConfiguration(params martini.Params, r render.Render, req *http.Request, user auth.User) {
+    if !isAuthorizedForAction(req, user) {
+        Respond(r, &APIResponse{Code: ERROR, Message: "Unauthorized"})
+        return
+    }
+    current := config.Show()
+    inst.AuditOperation("show-configuration", nil, "Triggered via API")
+
+    r.Text(http.StatusOK, fmt.Sprintf("%+v", current))
+}
+
 // ReplicationAnalysis retuens list of issues
 func (this *HttpAPI) replicationAnalysis(clusterName string, instanceKey *inst.InstanceKey, params martini.Params, r render.Render, req *http.Request) {
 	analysis, err := inst.GetReplicationAnalysis(clusterName, &inst.ReplicationAnalysisHints{IncludeDowntimed: true})
@@ -3758,6 +3770,7 @@ func (this *HttpAPI) RegisterRequests(m *martini.ClassicMartini) {
 	this.registerAPIRequestNoProxy(m, "raft-snapshot", this.RaftSnapshot)
 	this.registerAPIRequestNoProxy(m, "raft-follower-health-report/:authenticationToken/:raftBind/:raftAdvertise", this.RaftFollowerHealthReport)
 	this.registerAPIRequestNoProxy(m, "reload-configuration", this.ReloadConfiguration)
+	this.registerAPIRequestNoProxy(m, "show-configuration", this.ShowConfiguration)
 	this.registerAPIRequestNoProxy(m, "hostname-resolve-cache", this.HostnameResolveCache)
 	this.registerAPIRequestNoProxy(m, "reset-hostname-resolve-cache", this.ResetHostnameResolveCache)
 	// Meta
